@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Species {
+  DOG
+  CAT
+  BIRD
+  RABBIT
+  OTHER
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  UNKNOWN
+}
+
+enum ReminderType {
+  VACCINE
+  MEDICINE
+  CHECKUP
+  GROOMING
+  OTHER
+}
+
+enum ReminderStatus {
+  UPCOMING
+  DONE
+  OVERDUE
+}
+
+enum RecordType {
+  VACCINE
+  DIAGNOSIS
+  TRANSFER
+  OTHER
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  pets         Pet[]
+}
+
+model Pet {
+  id        String   @id @default(uuid())
+  ownerId   String
+  name      String
+  species   Species
+  breed     String
+  gender    Gender
+  birthDate DateTime?
+  weightKg  Float?
+  photoUrl  String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner          User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  reminders      Reminder[]
+  medicalRecords MedicalRecord[]
+
+  @@index([ownerId])
+}
+
+model Reminder {
+  id        String         @id @default(uuid())
+  petId     String
+  type      ReminderType
+  title     String
+  dueDate   DateTime
+  status    ReminderStatus @default(UPCOMING)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  pet Pet @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId])
+}
+
+model MedicalRecord {
+  id              String     @id @default(uuid())
+  petId           String
+  visitDate       DateTime
+  symptoms        String
+  diagnosis       String
+  treatment       String
+  cost            Int
+  recordType      RecordType
+  recordIdBytes32 String
+  recordHash      String
+  issuerAddress   String?
+  signature       String?
+  issuedAt        BigInt
+  createdAt       DateTime   @default(now())
+
+  pet Pet @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId])
+}
