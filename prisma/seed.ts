@@ -89,12 +89,16 @@ async function main() {
                 {
                   type: "Vaccine",
                   note: "Rabies booster",
-                  startAt: new Date(`2025-02-${petIndex + 5}T08:30:00Z`),
+                  startAt: new Date(
+                    `2025-02-${String(petIndex + 5).padStart(2, "0")}T08:30:00Z`
+                  ),
                 },
                 {
                   type: "Grooming",
                   note: "Full grooming session",
-                  startAt: new Date(`2025-03-${petIndex + 6}T14:00:00Z`),
+                  startAt: new Date(
+                    `2025-03-${String(petIndex + 6).padStart(2, "0")}T14:00:00Z`
+                  ),
                 },
               ],
             },
