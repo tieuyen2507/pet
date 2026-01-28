@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 const PUBLIC_PATHS = ["/", "/login", "/register", "/verify"];
+const PROTECTED_PREFIXES = ["/dashboard", "/pets", "/appointments", "/records"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -11,11 +12,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (pathname.startsWith("/api/auth")) {
+  if (pathname.startsWith("/api/auth") || pathname.startsWith("/api/register")) {
     return NextResponse.next();
   }
 
-  if (pathname.startsWith("/dashboard") || pathname.startsWith("/pets")) {
+  if (PROTECTED_PREFIXES.some((path) => pathname.startsWith(path))) {
     const token = await getToken({ req: request });
     if (!token) {
       const url = request.nextUrl.clone();
@@ -29,5 +30,10 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/pets/:path*"],
+  matcher: [
+    "/dashboard/:path*",
+    "/pets/:path*",
+    "/appointments/:path*",
+    "/records/:path*",
+  ],
 };
