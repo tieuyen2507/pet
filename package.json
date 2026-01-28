@@ -9,6 +9,7 @@
     "lint": "next lint",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "ts-node prisma/seed.ts",
     "hardhat:test": "hardhat test",
     "hardhat:node": "hardhat node",
     "hardhat:deploy": "hardhat run scripts/deploy.ts --network localhost"

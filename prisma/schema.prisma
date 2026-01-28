@@ -7,43 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Species {
-  DOG
-  CAT
-  BIRD
-  RABBIT
-  OTHER
-}
-
-enum Gender {
-  MALE
-  FEMALE
-  UNKNOWN
-}
-
-enum ReminderType {
-  VACCINE
-  MEDICINE
-  CHECKUP
-  GROOMING
-  OTHER
-}
-
-enum ReminderStatus {
-  UPCOMING
-  DONE
-  OVERDUE
-}
-
-enum RecordType {
-  VACCINE
-  DIAGNOSIS
-  TRANSFER
-  OTHER
-}
-
 model User {
-  id           String   @id @default(uuid())
+  id           String   @id @default(cuid())
   name         String
   email        String   @unique
   passwordHash String
@@ -52,56 +17,47 @@ model User {
 }
 
 model Pet {
-  id        String   @id @default(uuid())
+  id        String   @id @default(cuid())
   ownerId   String
   name      String
-  species   Species
+  species   String
   breed     String
-  gender    Gender
-  birthDate DateTime?
-  weightKg  Float?
+  gender    String
+  birthDate DateTime
   photoUrl  String?
-  notes     String?
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   owner          User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  reminders      Reminder[]
   medicalRecords MedicalRecord[]
+  appointments   Appointment[]
 
   @@index([ownerId])
 }
 
-model Reminder {
-  id        String         @id @default(uuid())
-  petId     String
-  type      ReminderType
-  title     String
-  dueDate   DateTime
-  status    ReminderStatus @default(UPCOMING)
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+model MedicalRecord {
+  id             String   @id @default(cuid())
+  petId          String
+  title          String
+  description    String
+  visitDate      DateTime
+  attachmentsUrl String?
+  recordHash     String?
+  txHash         String?
+  chainId        Int?
+  createdAt      DateTime @default(now())
 
   pet Pet @relation(fields: [petId], references: [id], onDelete: Cascade)
 
   @@index([petId])
 }
 
-model MedicalRecord {
-  id              String     @id @default(uuid())
-  petId           String
-  visitDate       DateTime
-  symptoms        String
-  diagnosis       String
-  treatment       String
-  cost            Int
-  recordType      RecordType
-  recordIdBytes32 String
-  recordHash      String
-  issuerAddress   String?
-  signature       String?
-  issuedAt        BigInt
-  createdAt       DateTime   @default(now())
+model Appointment {
+  id        String   @id @default(cuid())
+  petId     String
+  type      String
+  note      String?
+  startAt   DateTime
+  createdAt DateTime @default(now())
 
   pet Pet @relation(fields: [petId], references: [id], onDelete: Cascade)
 
