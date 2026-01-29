@@ -53,3 +53,15 @@ export const saveSignatureSchema = z.object({
   signature: z.string().min(1),
   recordHash: z.string().min(1),
 });
+
+export const recordCrudCreateSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().min(1),
+  visitDate: z.string().min(1),
+  attachmentsUrl: z.string().url().optional().nullable(),
+  recordHash: z.string().min(1).optional(),
+  txHash: z.string().min(1).optional().nullable(),
+  chainId: z.number().int().positive().optional().nullable(),
+});
+
+export const recordCrudUpdateSchema = recordCrudCreateSchema.partial();
