@@ -21,16 +21,33 @@ export default function PetsPage() {
   const [pets, setPets] = useState<Pet[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
     async function loadPets() {
       setLoading(true);
-      const response = await fetch(`/api/pets?search=${encodeURIComponent(search)}`);
-      const data = await response.json();
-      if (isMounted) {
-        setPets(data.pets ?? []);
-        setLoading(false);
+      try {
+        const response = await fetch(
+          `/api/pets?search=${encodeURIComponent(search)}`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch pets.");
+        }
+        const data = await response.json();
+        if (isMounted) {
+          setPets(data.pets ?? []);
+          setError(null);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError("Unable to load pets.");
+          setPets([]);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
     loadPets();
@@ -68,6 +85,15 @@ export default function PetsPage() {
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading pets...</p>
+      ) : error ? (
+        <Card className="glass-panel">
+          <CardHeader>
+            <CardTitle>Unable to load</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground">
+            {error}
+          </CardContent>
+        </Card>
       ) : pets.length === 0 ? (
         <Card className="glass-panel">
           <CardHeader>

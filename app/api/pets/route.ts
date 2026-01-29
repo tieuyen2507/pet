@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAuthSession } from "@/lib/api";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { petCreateSchema } from "@/lib/validation";
 
 export async function GET(request: Request) {
-  const session = await requireAuthSession();
-  if (!session) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -31,15 +32,18 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const session = await requireAuthSession();
-  if (!session) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = petCreateSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid payload", details: parsed.error.flatten() },
+      { status: 400 }
+    );
   }
 
   const pet = await prisma.pet.create({
