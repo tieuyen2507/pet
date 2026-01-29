@@ -1,6 +1,8 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
+import hardhat from "hardhat";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs.js";
+
+const { ethers } = hardhat;
 
 const recordId = ethers.keccak256(ethers.toUtf8Bytes("record-1"));
 const petId = ethers.keccak256(ethers.toUtf8Bytes("pet-1"));
