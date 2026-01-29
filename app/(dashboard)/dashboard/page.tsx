@@ -10,12 +10,11 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const [petCount, upcomingReminders, recordCount] = await Promise.all([
+  const [petCount, upcomingAppointments, recordCount] = await Promise.all([
     prisma.pet.count({ where: { ownerId: session.user.id } }),
-    prisma.reminder.count({
+    prisma.appointment.count({
       where: {
         pet: { ownerId: session.user.id },
-        status: "UPCOMING",
       },
     }),
     prisma.medicalRecord.count({
@@ -54,7 +53,7 @@ export default async function DashboardPage() {
             <CalendarCheck className="h-5 w-5 text-accent" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-semibold">{upcomingReminders}</div>
+            <div className="text-3xl font-semibold">{upcomingAppointments}</div>
             <p className="text-sm text-muted-foreground">Stay ahead of care tasks.</p>
           </CardContent>
         </Card>
