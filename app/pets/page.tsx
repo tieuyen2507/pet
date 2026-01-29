@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { PawPrint, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,44 +17,58 @@ interface Pet {
   weightKg?: number | null;
 }
 
+function useDebouncedValue<T>(value: T, delayMs: number) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handle = setTimeout(() => setDebouncedValue(value), delayMs);
+    return () => clearTimeout(handle);
+  }, [value, delayMs]);
+
+  return debouncedValue;
+}
+
 export default function PetsPage() {
   const [pets, setPets] = useState<Pet[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const deferredSearch = useDeferredValue(search);
+  const debouncedSearch = useDebouncedValue(deferredSearch, 300);
+  const queryParam = useMemo(
+    () => encodeURIComponent(debouncedSearch.trim()),
+    [debouncedSearch]
+  );
 
   useEffect(() => {
-    let isMounted = true;
+    const controller = new AbortController();
+
     async function loadPets() {
       setLoading(true);
       try {
-        const response = await fetch(
-          `/api/pets?search=${encodeURIComponent(search)}`
-        );
+        const response = await fetch(`/api/pets?search=${queryParam}`, {
+          signal: controller.signal,
+        });
         if (!response.ok) {
           throw new Error("Failed to fetch pets.");
         }
         const data = await response.json();
-        if (isMounted) {
-          setPets(data.pets ?? []);
-          setError(null);
-        }
+        setPets(data.pets ?? []);
+        setError(null);
       } catch (err) {
-        if (isMounted) {
-          setError("Unable to load pets.");
-          setPets([]);
-        }
+        if ((err as Error).name === "AbortError") return;
+        setError("Unable to load pets.");
+        setPets([]);
       } finally {
-        if (isMounted) {
+        if (!controller.signal.aborted) {
           setLoading(false);
         }
       }
     }
+
     loadPets();
-    return () => {
-      isMounted = false;
-    };
-  }, [search]);
+    return () => controller.abort();
+  }, [queryParam]);
 
   return (
     <div className="space-y-6 fade-up">

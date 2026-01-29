@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { BrowserProvider, Contract } from "ethers";
 import {
   CalendarClock,
   ClipboardList,
@@ -93,6 +92,8 @@ export default function PetDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [attestingId, setAttestingId] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const [reminderForm, setReminderForm] = useState({
     type: "VACCINE",
@@ -122,6 +123,23 @@ export default function PetDetailPage() {
   const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ?? "";
 
   const canAttest = useMemo(() => !!contractAddress, [contractAddress]);
+
+  async function uploadPhoto(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("/api/uploads", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error("Photo upload failed.");
+    }
+
+    const data = await response.json();
+    return data.url as string;
+  }
 
   async function loadAll() {
     try {
@@ -175,6 +193,17 @@ export default function PetDetailPage() {
     });
   }, [pet]);
 
+  useEffect(() => {
+    if (!photoFile) {
+      setPhotoPreview(null);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(photoFile);
+    setPhotoPreview(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [photoFile]);
+
   async function handleReminderSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const response = await fetch(`/api/pets/${petId}/reminders`, {
@@ -223,6 +252,16 @@ export default function PetDetailPage() {
     event.preventDefault();
     setError(null);
     const parsedWeight = editForm.weightKg ? Number(editForm.weightKg) : null;
+    let uploadedUrl = editForm.photoUrl || null;
+    try {
+      if (photoFile) {
+        uploadedUrl = await uploadPhoto(photoFile);
+      }
+    } catch (err) {
+      setError("Unable to upload photo.");
+      return;
+    }
+
     const payload = {
       name: editForm.name,
       species: editForm.species,
@@ -230,7 +269,7 @@ export default function PetDetailPage() {
       gender: editForm.gender,
       birthDate: editForm.birthDate || null,
       weightKg: Number.isFinite(parsedWeight) ? parsedWeight : null,
-      photoUrl: editForm.photoUrl || null,
+      photoUrl: uploadedUrl,
       notes: editForm.notes || null,
     };
 
@@ -302,6 +341,7 @@ export default function PetDetailPage() {
         throw new Error("MetaMask not found");
       }
 
+      const { BrowserProvider, Contract } = await import("ethers");
       const provider = new BrowserProvider((window as any).ethereum);
       await provider.send("eth_requestAccounts", []);
       const signer = await provider.getSigner();
@@ -353,27 +393,62 @@ export default function PetDetailPage() {
     );
   }
 
+  const displayPhoto = photoPreview || pet.photoUrl || "";
+  const initials = pet.name
+    .split(" ")
+    .map((chunk) => chunk[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
-    <div className="space-y-6 fade-up">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="space-y-2">
-          <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">
-            Profile
-          </p>
-          <h2 className="section-title text-3xl font-semibold">{pet.name}</h2>
-          <p className="text-sm text-muted-foreground">
-            {pet.species} / {pet.breed} / {pet.gender}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <Button variant="outline" onClick={() => router.push("/pets")}>
-            Back to pets
-          </Button>
-          <Button variant="destructive" onClick={handlePetDelete}>
-            Delete pet
-          </Button>
-        </div>
-      </div>
+    <div className="space-y-10 fade-up">
+      <Card className="glass-panel overflow-hidden">
+        <CardContent className="p-0">
+          <div className="relative">
+            <div className="h-36 w-full bg-gradient-to-r from-primary/15 via-accent/10 to-secondary/10" />
+            <div className="mx-auto -mt-12 flex w-full max-w-5xl flex-col gap-6 px-6 pb-8 lg:flex-row lg:items-end lg:justify-between">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
+                <div className="relative h-28 w-28 overflow-hidden rounded-2xl border border-border bg-white shadow-lg lg:h-32 lg:w-32">
+                  {displayPhoto ? (
+                    <img
+                      src={displayPhoto}
+                      alt={`${pet.name} photo`}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10 text-3xl font-semibold text-muted-foreground">
+                      {initials || "PET"}
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                    Profile
+                  </p>
+                  <h2 className="text-3xl font-semibold text-foreground lg:text-4xl">
+                    {pet.name}
+                  </h2>
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                    <Badge variant="secondary">{pet.species}</Badge>
+                    <span>{pet.breed}</span>
+                    <span>•</span>
+                    <span>{pet.gender}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button variant="outline" onClick={() => router.push("/pets")}>
+                  Back to pets
+                </Button>
+                <Button variant="destructive" onClick={handlePetDelete}>
+                  Delete pet
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {error ? (
         <p className="rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
@@ -381,25 +456,45 @@ export default function PetDetailPage() {
         </p>
       ) : null}
 
-      <Card className="glass-panel">
-        <CardHeader>
-          <CardTitle>Vitals snapshot</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-3 text-sm text-muted-foreground">
-          <div className="flex items-center gap-3">
-            <PawPrint className="h-4 w-4 text-primary" />
-            Weight: {pet.weightKg ? `${pet.weightKg} kg` : "N/A"}
-          </div>
-          <div className="flex items-center gap-3">
-            <CalendarClock className="h-4 w-4 text-accent" />
-            Birth date: {pet.birthDate ? new Date(pet.birthDate).toLocaleDateString() : "N/A"}
-          </div>
-          <div className="flex items-center gap-3">
-            <ClipboardList className="h-4 w-4 text-primary" />
-            Notes: {pet.notes || "No notes"}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+        <Card className="glass-panel">
+          <CardHeader>
+            <CardTitle>Vitals snapshot</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-3 text-sm text-muted-foreground">
+            <div className="flex items-center gap-3">
+              <PawPrint className="h-4 w-4 text-primary" />
+              Weight: {pet.weightKg ? `${pet.weightKg} kg` : "N/A"}
+            </div>
+            <div className="flex items-center gap-3">
+              <CalendarClock className="h-4 w-4 text-accent" />
+              Birth date:{" "}
+              {pet.birthDate
+                ? new Date(pet.birthDate).toLocaleDateString()
+                : "N/A"}
+            </div>
+            <div className="flex items-center gap-3">
+              <ClipboardList className="h-4 w-4 text-primary" />
+              Notes: {pet.notes || "No notes"}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="glass-panel">
+          <CardHeader>
+            <CardTitle>Photo</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <p>Upload a new photo to update the profile picture.</p>
+            <Input
+              id="quickPhotoFile"
+              type="file"
+              accept="image/*"
+              onChange={(event) => setPhotoFile(event.target.files?.[0] ?? null)}
+            />
+          </CardContent>
+        </Card>
+      </div>
 
       <Card className="glass-panel">
         <CardHeader>

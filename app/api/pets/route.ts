@@ -14,6 +14,14 @@ export async function GET(request: Request) {
   const search = searchParams.get("search")?.trim();
 
   const pets = await prisma.pet.findMany({
+    select: {
+      id: true,
+      name: true,
+      species: true,
+      breed: true,
+      gender: true,
+      weightKg: true,
+    },
     where: {
       ownerId: session.user.id,
       ...(search

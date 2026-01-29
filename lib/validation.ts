@@ -24,7 +24,13 @@ export const petCreateSchema = z.object({
   gender: genderEnum,
   birthDate: z.string().optional().nullable(),
   weightKg: z.number().nonnegative().finite().optional().nullable(),
-  photoUrl: z.string().url().optional().nullable(),
+  photoUrl: z
+    .union([
+      z.string().url(),
+      z.string().regex(/^\/uploads\/.+/, "Invalid photo URL"),
+    ])
+    .optional()
+    .nullable(),
   notes: z.string().optional().nullable(),
 });
 
