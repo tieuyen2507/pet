@@ -1,6 +1,8 @@
-import { ethers } from "hardhat";
+import hardhat from "hardhat";
 import fs from "fs";
 import path from "path";
+
+const { ethers } = hardhat as { ethers: typeof import("ethers") };
 
 async function main() {
   const [deployer] = await ethers.getSigners();

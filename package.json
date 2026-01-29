@@ -11,7 +11,7 @@
     "prisma:migrate": "prisma migrate dev",
     "hardhat:test": "hardhat test",
     "hardhat:node": "hardhat node",
-    "hardhat:deploy": "hardhat run scripts/deploy.ts --network localhost"
+    "hardhat:deploy": "node -e \"process.env.HARDHAT_NETWORK='localhost'; require('ts-node').register({transpileOnly:true, skipProject:true, compilerOptions:{module:'CommonJS', moduleResolution:'node'}}); require('./scripts/deploy.ts');\""
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.4.0",
