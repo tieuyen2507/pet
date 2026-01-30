@@ -52,7 +52,7 @@ export default function NewRecordPage() {
     });
 
     if (!response.ok) {
-      setError("Unable to create record. Check inputs and try again.");
+      setError("Không thể tạo hồ sơ. Vui lòng kiểm tra dữ liệu.");
       setLoading(false);
       return;
     }
@@ -66,25 +66,25 @@ export default function NewRecordPage() {
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">
-            Records
+            Hồ sơ
           </p>
           <h2 className="section-title text-3xl font-semibold">
-            New medical record
+            Hồ sơ y tế mới
           </h2>
         </div>
         <Button variant="ghost" asChild>
-          <Link href={`/pets/${petId}/records`}>Back to records</Link>
+          <Link href={`/pets/${petId}/records`}>Quay lại danh sách</Link>
         </Button>
       </div>
 
       <Card className="glass-panel">
         <CardHeader>
-          <CardTitle>Record details</CardTitle>
+          <CardTitle>Chi tiết hồ sơ</CardTitle>
         </CardHeader>
         <CardContent>
           <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">Tiêu đề</Label>
               <Input
                 id="title"
                 required
@@ -93,7 +93,7 @@ export default function NewRecordPage() {
               />
             </div>
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Mô tả</Label>
               <Textarea
                 id="description"
                 required
@@ -104,7 +104,7 @@ export default function NewRecordPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="visitDate">Visit date</Label>
+              <Label htmlFor="visitDate">Ngày khám</Label>
               <Input
                 id="visitDate"
                 type="date"
@@ -116,7 +116,7 @@ export default function NewRecordPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="attachmentsUrl">Attachments URL</Label>
+              <Label htmlFor="attachmentsUrl">Liên kết tệp đính kèm</Label>
               <Input
                 id="attachmentsUrl"
                 type="url"
@@ -127,7 +127,7 @@ export default function NewRecordPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="recordHash">Record hash</Label>
+              <Label htmlFor="recordHash">Mã băm hồ sơ</Label>
               <Input
                 id="recordHash"
                 value={form.recordHash}
@@ -137,7 +137,7 @@ export default function NewRecordPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="txHash">Transaction hash</Label>
+              <Label htmlFor="txHash">Mã giao dịch</Label>
               <Input
                 id="txHash"
                 value={form.txHash}
@@ -145,7 +145,7 @@ export default function NewRecordPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="chainId">Chain ID</Label>
+              <Label htmlFor="chainId">Mã chain</Label>
               <Input
                 id="chainId"
                 type="number"
@@ -164,7 +164,7 @@ export default function NewRecordPage() {
 
             <div className="md:col-span-2 flex justify-end">
               <Button type="submit" disabled={loading}>
-                {loading ? "Saving..." : "Create record"}
+                {loading ? "Đang lưu..." : "Tạo hồ sơ"}
               </Button>
             </div>
           </form>
