@@ -53,3 +53,11 @@ export const saveSignatureSchema = z.object({
   signature: z.string().min(1),
   recordHash: z.string().min(1),
 });
+
+export const appointmentCreateSchema = z.object({
+  type: z.string().min(1),
+  note: z.string().optional().nullable(),
+  startAt: z.string().min(1),
+});
+
+export const appointmentUpdateSchema = appointmentCreateSchema.partial();

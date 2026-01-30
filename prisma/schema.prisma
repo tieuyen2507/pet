@@ -68,6 +68,7 @@ model Pet {
   owner          User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   reminders      Reminder[]
   medicalRecords MedicalRecord[]
+  appointments   Appointment[]
 
   @@index([ownerId])
 }
@@ -102,6 +103,19 @@ model MedicalRecord {
   signature       String?
   issuedAt        BigInt
   createdAt       DateTime   @default(now())
+
+  pet Pet @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId])
+}
+
+model Appointment {
+  id        String   @id @default(uuid())
+  petId     String
+  type      String
+  note      String?
+  startAt   DateTime
+  createdAt DateTime @default(now())
 
   pet Pet @relation(fields: [petId], references: [id], onDelete: Cascade)
 
