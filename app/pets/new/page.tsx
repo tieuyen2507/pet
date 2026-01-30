@@ -23,6 +23,7 @@ export default function NewPetPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -39,12 +40,40 @@ export default function NewPetPage() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  async function uploadPhoto(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("/api/uploads", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error("Photo upload failed.");
+    }
+
+    const data = await response.json();
+    return data.url as string;
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     setLoading(true);
 
     const parsedWeight = form.weightKg ? Number(form.weightKg) : null;
+    let uploadedUrl = form.photoUrl || null;
+    try {
+      if (photoFile) {
+        uploadedUrl = await uploadPhoto(photoFile);
+      }
+    } catch (err) {
+      setError("Unable to upload photo.");
+      setLoading(false);
+      return;
+    }
+
     const payload = {
       name: form.name,
       species: form.species,
@@ -52,7 +81,7 @@ export default function NewPetPage() {
       gender: form.gender,
       birthDate: form.birthDate || null,
       weightKg: Number.isFinite(parsedWeight) ? parsedWeight : null,
-      photoUrl: form.photoUrl || null,
+      photoUrl: uploadedUrl,
       notes: form.notes || null,
     };
 
@@ -173,6 +202,17 @@ export default function NewPetPage() {
                 type="url"
                 value={form.photoUrl}
                 onChange={(event) => updateField("photoUrl", event.target.value)}
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="photoFile">Or upload photo</Label>
+              <Input
+                id="photoFile"
+                type="file"
+                accept="image/*"
+                onChange={(event) =>
+                  setPhotoFile(event.target.files?.[0] ?? null)
+                }
               />
             </div>
             <div className="space-y-2 md:col-span-2">

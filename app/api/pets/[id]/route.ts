@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAuthSession } from "@/lib/api";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { petUpdateSchema } from "@/lib/validation";
 
 export async function GET(
   _request: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await requireAuthSession();
-  if (!session) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -27,15 +28,18 @@ export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await requireAuthSession();
-  if (!session) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = petUpdateSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid payload", details: parsed.error.flatten() },
+      { status: 400 }
+    );
   }
 
   const existing = await prisma.pet.findFirst({
@@ -73,8 +77,8 @@ export async function DELETE(
   _request: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await requireAuthSession();
-  if (!session) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
