@@ -1,101 +1,101 @@
 # Pet Health Passport
 
-Pet Health Passport is a full-stack project built with Next.js 14 (App Router + TypeScript), PostgreSQL/Prisma, and a Hardhat + Solidity contract for on-chain attestations. It supports core pet management, reminders, and medical records with EIP-712 signatures and public verification.
+Ứng dụng quản lý sức khỏe thú cưng với Next.js 14, PostgreSQL/Prisma và Hardhat + Solidity. Hỗ trợ đăng nhập, quản lý thú cưng, nhắc lịch, hồ sơ y tế, ký/neo dữ liệu on-chain và trang xác minh công khai.
 
-## Features
+## Tính năng chính
 
-- Auth: NextAuth Credentials, register + login, bcrypt password hashing
-- Pets CRUD + search
-- Reminders with status (UPCOMING/DONE/OVERDUE)
-- Medical records with on-chain attestation hash + EIP-712 signatures
-- Public verification page: `/verify?recordId=...`
+- Đăng ký/đăng nhập (NextAuth Credentials)
+- CRUD thú cưng, nhắc lịch, hồ sơ y tế
+- Ký/neo dữ liệu lên blockchain
+- Trang xác minh công khai: `/verify?recordId=<uuid>`
+- Ví MetaMask + ký thông điệp: `/wallet`
 
-## Tech Stack
+## Yêu cầu
 
-- Next.js 14 (App Router) + TypeScript
-- Prisma + PostgreSQL
-- Tailwind CSS + shadcn/ui
-- Hardhat + Solidity + OpenZeppelin AccessControl
-- ethers v6
+- Node.js 18+
+- PostgreSQL
+- MetaMask (để demo ký/neo)
 
-## Quick Start
+## Cài đặt & chạy
 
-### 1) Install dependencies
+### 1) Cài dependencies
 
 ```bash
 npm install
 ```
 
-### 2) Configure environment
+### 2) Thiết lập DATABASE_URL (Postgres)
 
-```bash
-cp .env.example .env
+Copy file `.env.example` thành `.env` và điền `DATABASE_URL`.
+
+Ví dụ:
+```
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/pet_manager"
 ```
 
-Edit `.env` with your database and contract values.
-
-### 3) Set up the database
+### 3) Prisma migrate + seed
 
 ```bash
 npm run prisma:generate
 npm run prisma:migrate
+npm run prisma:seed
 ```
 
-### 4) Run the app
+> Nếu chưa có script `prisma:seed`, có thể chạy trực tiếp:
+> `npx ts-node prisma/seed.ts`
+
+### 4) Hardhat local + deploy contract
+
+Terminal 1:
+```bash
+npm run hardhat:node
+```
+
+Terminal 2:
+```bash
+npm run hardhat:deploy
+```
+
+Sau khi deploy, cập nhật `.env`:
+```
+CHAIN_ID=31337
+RPC_URL="http://127.0.0.1:8545"
+CONTRACT_ADDRESS="<địa chỉ contract>"
+NEXT_PUBLIC_CONTRACT_ADDRESS="<địa chỉ contract>"
+```
+
+### 5) Chạy app
 
 ```bash
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Mở `http://localhost:3000`.
 
-## Hardhat (Smart Contract)
+## Demo flow đầy đủ
 
-### Run tests
+1. **Register/Login**  
+   Vào `/register` hoặc `/login`.
 
-```bash
-npx hardhat test
-```
+2. **Tạo pet**  
+   Vào `/pets` → tạo pet mới.
 
-### Local chain + deploy
+3. **Tạo record**  
+   Vào `/pets/<PET_ID>/records/new` → tạo record.
 
-```bash
-npx hardhat node
-npx hardhat run scripts/deploy.ts --network localhost
-```
+4. **Kết nối ví & ký thông điệp**  
+   Vào `/wallet` → Connect MetaMask → Sign message.
 
-Copy the deployed contract address into:
+5. **Neo record lên blockchain**  
+   Quay lại `/pets/<PET_ID>/records` → bấm **Neo hồ sơ**  
+   → txHash được lưu trong DB và hiển thị ở record.
 
-- `CONTRACT_ADDRESS`
-- `NEXT_PUBLIC_CONTRACT_ADDRESS`
+## Scripts hữu ích
 
-Then restart the Next.js dev server.
-
-## EIP-712 Attestation Flow
-
-1. Create a medical record in `/pets/[id]`.
-2. Click **Attest (Vet)**.
-3. Server returns typed data from `/api/records/[id]/prepare-attestation`.
-4. Wallet signs typed data and sends on-chain `attestRecord`.
-5. Signature saved via `/api/records/[id]/save-signature`.
-
-## Public Verification
-
-Use `GET /verify?recordId=<record-uuid>` to validate:
-
-- Recomputed hash vs on-chain attestation
-- Signature recovery vs issuer address
-
-## Notes
-
-- Vet/Admin roles are determined via `VET_EMAILS` and `ADMIN_EMAILS` in `.env`.
-- For on-chain reads, set `RPC_URL` to a reachable JSON-RPC endpoint.
-
-## Scripts
-
-- `npm run dev` - Next.js dev server
-- `npm run prisma:generate` - Prisma client
-- `npm run prisma:migrate` - Prisma migrate
-- `npm run hardhat:test` - Contract tests
-- `npm run hardhat:node` - Local chain
-- `npm run hardhat:deploy` - Deploy contract to localhost
+- `npm run dev` – chạy app
+- `npm run prisma:generate` – tạo Prisma client
+- `npm run prisma:migrate` – chạy migration
+- `npm run prisma:seed` – seed dữ liệu
+- `npm run hardhat:test` – test smart contract
+- `npm run hardhat:node` – local chain
+- `npm run hardhat:deploy` – deploy contract vào local chain
