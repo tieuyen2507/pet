@@ -91,6 +91,8 @@ model Reminder {
 model MedicalRecord {
   id              String     @id @default(uuid())
   petId           String
+  title           String?
+  description     String?
   visitDate       DateTime
   symptoms        String
   diagnosis       String
@@ -99,6 +101,9 @@ model MedicalRecord {
   recordType      RecordType
   recordIdBytes32 String
   recordHash      String
+  attachmentsUrl  String?
+  txHash          String?
+  chainId         Int?
   issuerAddress   String?
   signature       String?
   issuedAt        BigInt
